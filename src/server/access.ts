@@ -40,9 +40,12 @@ export function registerLocalAccess(
   const hosts = new Set(
     desktop
       ? [`127.0.0.1:${port}`]
-      : origin
-        ? [origin.host]
-        : ['localhost', '127.0.0.1', '[::1]'].map((name) => new URL(`http://${name}:${port}`).host),
+      : [
+          ...(origin ? [origin.host] : []),
+          ...['localhost', '127.0.0.1', '[::1]'].map(
+            (name) => new URL(`http://${name}:${port}`).host,
+          ),
+        ],
   );
   const expected = Buffer.from(access.key);
   const cookie = accessCookie(port);
@@ -104,7 +107,7 @@ export function registerLocalAccess(
       }
       if (
         (origin
-          ? request.headers.origin !== origin.origin
+          ? request.headers.origin !== origin.origin && !hosts.has(requested.host)
           : requested.protocol !== 'http:' ||
             request.headers.origin !== requested.origin ||
             !hosts.has(requested.host)) ||
